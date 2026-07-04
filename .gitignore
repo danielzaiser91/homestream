@@ -4,6 +4,9 @@ config/
 cache/
 *.log
 
+# Local dev / harness tooling
+.claude/
+
 # OS noise
 .DS_Store
 Thumbs.db

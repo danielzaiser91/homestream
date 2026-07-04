@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HomeStream — your own free media server</title>
+<meta name="description" content="Self-hosted Jellyfin + Jellyseerr media server. Free, 2K to 4 viewers, no buffering. Honest hosting guide.">
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --border:#2a3240;
+    --text:#e6edf3; --muted:#9aa7b4; --accent:#7c5cff; --accent2:#00c2a8;
+    --good:#3fb950; --warn:#d29922; --bad:#f85149; --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}
+  a{color:var(--accent2);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px}
+  header.hero{padding:70px 0 50px;text-align:center;
+    background:radial-gradient(1000px 400px at 50% -10%,rgba(124,92,255,.25),transparent 70%)}
+  .badge{display:inline-block;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--accent2);border:1px solid var(--border);border-radius:999px;padding:5px 14px;margin-bottom:22px}
+  h1{font-size:2.9rem;margin:0 0 14px;line-height:1.1;
+    background:linear-gradient(90deg,#fff,#b9a7ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{font-size:1.2rem;color:var(--muted);max-width:640px;margin:0 auto 30px}
+  .cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .btn{display:inline-block;padding:12px 22px;border-radius:10px;font-weight:600;font-size:.98rem}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.primary:hover{background:#6a49f2;text-decoration:none}
+  .btn.ghost{border:1px solid var(--border);color:var(--text)}
+  .btn.ghost:hover{border-color:var(--accent);text-decoration:none}
+  section{padding:46px 0;border-top:1px solid var(--border)}
+  h2{font-size:1.7rem;margin:0 0 8px}
+  .lead{color:var(--muted);margin:0 0 26px}
+  .grid{display:grid;gap:16px}
+  .cols-3{grid-template-columns:repeat(3,1fr)}
+  .cols-2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:760px){.cols-3,.cols-2{grid-template-columns:1fr}h1{font-size:2.1rem}}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+  .card h3{margin:0 0 6px;font-size:1.1rem}
+  .card p{margin:0;color:var(--muted);font-size:.95rem}
+  .card .ico{font-size:1.6rem;margin-bottom:10px}
+  .flow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;margin:8px 0 4px}
+  .chip{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-weight:600}
+  .chip small{display:block;color:var(--muted);font-weight:400;font-size:.8rem}
+  .arrow{color:var(--accent);font-size:1.4rem}
+  table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--border);
+    border-radius:var(--radius);overflow:hidden;font-size:.94rem}
+  th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--border)}
+  th{background:var(--panel2);font-size:.82rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+  tr:last-child td{border-bottom:none}
+  .tag{font-size:.78rem;padding:2px 8px;border-radius:6px;font-weight:600}
+  .t-good{background:rgba(63,185,80,.15);color:var(--good)}
+  .t-warn{background:rgba(210,153,34,.15);color:var(--warn)}
+  .t-bad{background:rgba(248,81,73,.15);color:var(--bad)}
+  .callout{border-left:3px solid var(--warn);background:var(--panel);padding:16px 20px;border-radius:0 10px 10px 0;margin:18px 0}
+  .callout.good{border-left-color:var(--good)}
+  .callout b{color:var(--text)}
+  ol.steps{counter-reset:s;list-style:none;padding:0;margin:0}
+  ol.steps li{position:relative;padding:14px 0 14px 52px;border-bottom:1px solid var(--border)}
+  ol.steps li:last-child{border-bottom:none}
+  ol.steps li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:12px;
+    width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700}
+  ol.steps b{color:var(--text)}
+  ol.steps span{color:var(--muted)}
+  pre{background:#0a0e14;border:1px solid var(--border);border-radius:10px;padding:16px;overflow:auto;
+    font-size:.88rem;color:#cbd5e1}
+  code{font-family:"SF Mono",Menlo,Consolas,monospace}
+  footer{padding:40px 0 60px;color:var(--muted);text-align:center;font-size:.9rem;border-top:1px solid var(--border)}
+  .price{font-size:2.1rem;font-weight:700}
+  .price small{font-size:.9rem;color:var(--muted);font-weight:400}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="badge">Self-hosted · Free · Yours</span>
+    <h1>Your own media server.<br>2K to 4 people. No monthly fee.</h1>
+    <p class="sub">HomeStream is a one-command <b>Jellyfin</b> + <b>Jellyseerr</b> stack with automatic HTTPS —
+    built to stream up to 2K to about four viewers at once, hosted free on an Oracle Cloud ARM box. No Plex Pass, nothing phoning home.</p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/danielzaiser91/homestream">View the repo →</a>
+      <a class="btn ghost" href="#deploy">How to deploy</a>
+    </div>
+  </div>
+</header>
+
+<section id="stack">
+  <div class="wrap">
+    <h2>The stack</h2>
+    <p class="lead">Three containers. Free forever. Runs on ARM, x86, or a spare PC.</p>
+    <div class="flow">
+      <div class="chip">Jellyseerr<small>browse &amp; request UI</small></div>
+      <span class="arrow">→</span>
+      <div class="chip">Jellyfin<small>media server &amp; player</small></div>
+      <span class="arrow">→</span>
+      <div class="chip">Caddy<small>auto-HTTPS proxy</small></div>
+    </div>
+    <div class="grid cols-3" style="margin-top:22px">
+      <div class="card"><div class="ico">🎬</div><h3>Jellyfin</h3><p>Open-source media server. Free hardware transcoding, apps for every TV/phone, no account phoning home.</p></div>
+      <div class="card"><div class="ico">🍿</div><h3>Jellyseerr</h3><p>Netflix-style discovery. Household members browse and request titles without touching the server.</p></div>
+      <div class="card"><div class="ico">🔒</div><h3>Caddy</h3><p>Fetches and renews Let's Encrypt certificates automatically. Six lines of config, real HTTPS.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="why">
+  <div class="wrap">
+    <h2>Why Jellyfin, not Plex (July 2026)</h2>
+    <p class="lead">Plex spent 2025–26 moving core features behind a paywall. The math stopped making sense.</p>
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>Plex</h3>
+        <div class="price">$749<small>/lifetime pass (tripled in July 2026)</small></div>
+        <p style="margin-top:10px">Remote streaming of <i>your own</i> library and hardware transcoding now require Plex Pass. Account required, metadata routed through Plex servers.</p>
+      </div>
+      <div class="card" style="border-color:var(--accent)">
+        <h3>Jellyfin</h3>
+        <div class="price" style="color:var(--good)">$0<small>/forever, every feature</small></div>
+        <p style="margin-top:10px">MIT/GPL open source. No premium tier, no telemetry, no cloud dependency. Hardware transcoding free. You own the whole thing.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="hosting">
+  <div class="wrap">
+    <h2>The honest part: what's actually free</h2>
+    <p class="lead">Free <i>streaming</i> is real. Free <i>unlimited storage</i> is not. Here's the truth so you don't hit a wall later.</p>
+
+    <table>
+      <tr><th>Host</th><th>Cost</th><th>4× 2K streams</th><th>Library size</th></tr>
+      <tr><td><b>Oracle Cloud Always Free</b></td><td>$0</td><td><span class="tag t-good">Yes (direct play)</span></td><td>~200 GB · 10–30 films</td></tr>
+      <tr><td>Hetzner VPS + Storage Box</td><td>~€8–16/mo</td><td><span class="tag t-good">Yes</span></td><td>1–5 TB+ · large</td></tr>
+      <tr><td>Spare PC at home</td><td>Free*</td><td><span class="tag t-warn">If upload ≥60 Mbps</span></td><td>As big as your disks</td></tr>
+      <tr><td>GitHub Pages / Vercel / Render free</td><td>$0</td><td><span class="tag t-bad">No — can't stream video</span></td><td>—</td></tr>
+    </table>
+
+    <div class="callout">
+      <b>The bandwidth is easy.</b> 4 simultaneous 2K streams ≈ 60 Mbps. Oracle's 10 TB/month egress covers
+      <b>~370 hours</b> of that. Your real limits are <b>storage</b> (200 GB free ≈ a curated library, not "everything")
+      and <b>transcoding</b> (the free ARM box has no GPU — so keep files in direct-play formats).
+    </div>
+    <div class="callout good">
+      <b>Recommendation:</b> start on Oracle Always Free with a curated 2K library — it fully meets
+      "4 people, 2K, no buffering, $0." Outgrow 200 GB? Move the exact same compose file to a Hetzner VPS + Storage Box.
+      Nothing else changes.
+    </div>
+  </div>
+</section>
+
+<section id="deploy">
+  <div class="wrap">
+    <h2>Deploy it</h2>
+    <p class="lead">On a fresh Ubuntu box (Oracle ARM, any VPS, or an old PC).</p>
+    <ol class="steps">
+      <li><b>Spin up the VM.</b> <span>Oracle Cloud → VM.Standard.A1.Flex (2 OCPU / 12 GB), Ubuntu 24.04, 200 GB disk. Open ports 80 + 443 in the Security List.</span></li>
+      <li><b>Point a domain at it.</b> <span>Free via DuckDNS → set two names (watch. / request.) to the VM's public IP.</span></li>
+      <li><b>Clone &amp; run one script.</b></li>
+    </ol>
+    <pre><code>git clone https://github.com/danielzaiser91/homestream.git
+cd homestream
+cp .env.example .env      # set domains, email, media path
+nano .env
+sudo bash scripts/bootstrap.sh</code></pre>
+    <ol class="steps" style="margin-top:8px">
+      <li><b>Finish the wizard.</b> <span>Open https://watch.&lt;domain&gt;, create your admin user, add libraries at /media/movies and /media/shows.</span></li>
+      <li><b>Add media &amp; viewers.</b> <span>Copy your files in, add up to 4 Jellyfin users, tell their apps to prefer direct play. Done.</span></li>
+    </ol>
+    <p style="margin-top:22px"><a class="btn primary" href="https://github.com/danielzaiser91/homestream/blob/main/docs/DEPLOY.md">Full step-by-step guide →</a></p>
+  </div>
+</section>
+
+<section id="legal">
+  <div class="wrap">
+    <h2>What you put on it</h2>
+    <p class="lead">HomeStream is the server — like owning a shelf of Blu-rays and a good TV. It does <b>not</b> download copyrighted content.</p>
+    <div class="grid cols-2">
+      <div class="card"><h3>✅ Legit to host</h3><p>Your own DVD/Blu-ray rips, DRM-free purchases, home videos, and huge public-domain / Creative-Commons libraries (Internet Archive, Blender open movies).</p></div>
+      <div class="card"><h3>🚫 Not included</h3><p>The "arr" auto-download stack from those Reddit guides pirates current movies/TV. This project deliberately leaves it out and stops at server + UI + hosting.</p></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>HomeStream · Jellyfin + Jellyseerr + Caddy · built as a free, honest alternative to a paywalled Plex.</p>
+    <p><a href="https://github.com/danielzaiser91/homestream">GitHub repo</a> · <a href="https://jellyfin.org">Jellyfin</a> · <a href="https://www.oracle.com/cloud/free/">Oracle Free Tier</a></p>
+  </div>
+</footer>
+
+</body>
+</html>
