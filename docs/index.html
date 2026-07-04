@@ -72,6 +72,8 @@
   .card:hover{transform:scale(1.12);box-shadow:0 8px 24px rgba(0,0,0,.7);z-index:5}
   .card:hover .cap{opacity:1}
   .card .yr{color:var(--muted);font-weight:400}
+  .card .prog{position:absolute;left:0;right:0;bottom:0;height:4px;background:rgba(255,255,255,.25)}
+  .card .prog i{display:block;height:100%;background:var(--red)}
   .arrow-btn{position:absolute;top:0;bottom:10px;width:4vw;z-index:6;border:none;cursor:pointer;color:#fff;
     background:rgba(0,0,0,.5);opacity:0;transition:opacity .2s;font-size:1.6rem}
   .track-wrap:hover .arrow-btn{opacity:1}
@@ -93,7 +95,11 @@
     box-shadow:0 20px 60px rgba(0,0,0,.8)}
   .player video{width:100%;max-height:74vh;background:#000;display:block}
   .player .pinfo{padding:16px 22px 22px;background:var(--bg2)}
-  .player .pinfo h3{font-size:1.4rem;margin-bottom:6px}
+  .player .pinfo h3{font-size:1.4rem;margin-bottom:6px;display:flex;align-items:center;gap:14px}
+  .listbtn{background:rgba(109,109,110,.7);color:#fff;border:none;border-radius:5px;padding:6px 14px;
+    font-size:.85rem;font-weight:700;cursor:pointer;flex:none}
+  .listbtn:hover{opacity:.82}
+  .listbtn.in{background:#fff;color:#000}
   .player .pinfo .m{color:#46d369;font-weight:700;font-size:.9rem;margin-bottom:8px}
   .player .pinfo p{color:var(--muted);font-size:.95rem;line-height:1.5}
   .closeX{position:absolute;top:12px;right:12px;z-index:5;width:40px;height:40px;border-radius:50%;
@@ -162,17 +168,45 @@
 const SVG_PLAY='<svg viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"/></svg>';
 const SVG_INFO='<svg viewBox="0 0 24 24" fill="white"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/></svg>';
 let DATA=[];
-const BUILD_VERSION="20260704-1857"; // auto-stamped by scripts/release.sh — matches docs/version.json
+const BUILD_VERSION="20260704-2113"; // auto-stamped by scripts/release.sh — matches docs/version.json
 
 function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
+/* ---- localStorage: watch progress + my list ---- */
+function store(k,fb){try{return JSON.parse(localStorage.getItem(k))??fb;}catch(e){return fb;}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+const progress=()=>store('hf_progress',{});
+const mylist=()=>store('hf_mylist',[]);
+function setProgress(id,t,d){
+  const p=progress();
+  if(d&&t/d>0.95){delete p[id];}       // finished -> drop from Continue Watching
+  else{p[id]={t:Math.floor(t),d:Math.floor(d||0),ts:Date.now()};}
+  save('hf_progress',p);
+}
+function inList(id){return mylist().includes(id);}
+function toggleList(id){
+  let l=mylist();
+  l=l.includes(id)?l.filter(x=>x!==id):[id,...l];
+  save('hf_mylist',l); render(); syncListBtns(id);
+}
+function syncListBtns(id){
+  document.querySelectorAll('.listbtn[data-id]').forEach(b=>{
+    if(b.dataset.id!==id)return;
+    b.classList.toggle('in',inList(id));
+    b.textContent=inList(id)?'✓ My List':'+ My List';
+  });
+}
+
 function cardHTML(item,i){
   const t=esc(item.title);
+  const pr=progress()[item.id];
+  const bar=pr&&pr.d?`<div class="prog"><i style="width:${Math.min(100,Math.round(pr.t/pr.d*100))}%"></i></div>`:'';
   return `<div class="card" onclick="openById('${item.id}')">
     <img src="${esc(item.poster)}" alt="${t}" loading="lazy"
          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
     <div class="fallback" style="display:none">${t}</div>
     <div class="cap">${t} <span class="yr">${esc(item.year)}</span></div>
+    ${bar}
   </div>`;
 }
 
@@ -180,6 +214,14 @@ function render(){
   // group by row, preserve order
   const order=[]; const groups={};
   DATA.forEach(it=>{ if(!groups[it.row]){groups[it.row]=[];order.push(it.row);} groups[it.row].push(it); });
+
+  // dynamic rows first: Continue Watching (by recency), then My List
+  const pr=progress();
+  const cw=Object.keys(pr).map(id=>DATA.find(d=>d.id===id)).filter(Boolean)
+    .sort((a,b)=>pr[b.id].ts-pr[a.id].ts);
+  const ml=mylist().map(id=>DATA.find(d=>d.id===id)).filter(Boolean);
+  if(ml.length){order.unshift('My List');groups['My List']=ml;}
+  if(cw.length){order.unshift('Continue Watching');groups['Continue Watching']=cw;}
 
   // hero = a title with a decent description
   const feat=DATA.find(d=>d.desc&&d.desc.length>80)||DATA[0];
@@ -191,7 +233,9 @@ function render(){
       <p>${esc(feat.desc)}</p>
       <div class="btns">
         <button class="btn play" onclick="openById('${feat.id}')">${SVG_PLAY} Play</button>
-        <button class="btn info" onclick="openById('${feat.id}')">${SVG_INFO} More Info</button>
+        <button class="btn info listbtn ${inList(feat.id)?'in':''}" data-id="${feat.id}"
+          style="font-size:1.05rem;padding:11px 26px"
+          onclick="toggleList('${feat.id}')">${inList(feat.id)?'✓ My List':'+ My List'}</button>
       </div>
     </div>`;
 
@@ -212,16 +256,38 @@ let CUR=null, retried=false;
 function openById(id){
   const it=DATA.find(d=>d.id===id); if(!it)return;
   CUR=it; retried=false;
-  document.getElementById('pTitle').textContent=it.title;
+  document.getElementById('pTitle').innerHTML=esc(it.title)+
+    ` <button class="listbtn ${inList(id)?'in':''}" data-id="${id}" onclick="toggleList('${id}')">`+
+    (inList(id)?'✓ My List':'+ My List')+`</button>`;
   document.getElementById('pMeta').textContent=`${it.year} · ${it.row}`;
   document.getElementById('pDesc').textContent=it.desc||'';
   document.getElementById('pMsg').style.display='none';
   const v=document.getElementById('video');
   v.src=it.video; v.load();
+  // resume where the viewer left off (if >10s in and not basically finished)
+  const pr=progress()[id];
+  if(pr&&pr.t>10){
+    v.addEventListener('loadedmetadata',function once(){
+      v.removeEventListener('loadedmetadata',once);
+      if(!pr.d||pr.t<pr.d*0.95) v.currentTime=pr.t;
+    });
+  }
   document.getElementById('modal').classList.add('open');
   v.play().catch(()=>{});
   document.body.style.overflow='hidden';
 }
+// persist playback position (throttled to ~3s)
+let lastSave=0;
+document.getElementById('video').addEventListener('timeupdate',()=>{
+  if(!CUR)return;
+  const v=document.getElementById('video');
+  if(v.currentTime>10&&Date.now()-lastSave>3000){
+    lastSave=Date.now(); setProgress(CUR.id,v.currentTime,v.duration);
+  }
+});
+document.getElementById('video').addEventListener('ended',()=>{
+  if(CUR){setProgress(CUR.id,1e9,1);render();}   // mark finished -> drops out of CW
+});
 // Archive.org occasionally 500s on a single CDN node — retry once, then offer a link.
 document.getElementById('video').addEventListener('error',()=>{
   if(!CUR)return;
@@ -233,9 +299,12 @@ document.getElementById('video').addEventListener('error',()=>{
     `<a href="https://archive.org/details/${CUR.id}" target="_blank" rel="noopener">Open on Archive.org →</a>`;
 });
 function closePlayer(){
-  const v=document.getElementById('video'); v.pause(); v.removeAttribute('src'); v.load();
+  const v=document.getElementById('video');
+  if(CUR&&v.currentTime>10) setProgress(CUR.id,v.currentTime,v.duration);
+  v.pause(); v.removeAttribute('src'); v.load();
   document.getElementById('modal').classList.remove('open');
   document.body.style.overflow='';
+  render();   // refresh Continue Watching row with the new position
 }
 document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')closePlayer();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closePlayer();});

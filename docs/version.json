@@ -1,5 +1,5 @@
 {
-  "version": "20260704-1857",
+  "version": "20260704-2113",
   "app": "HomeFlix",
-  "notes": "Auto-update watcher added: stale cached pages self-heal or show an update banner"
+  "notes": "Continue Watching row with resume + progress bars, My List feature"
 }
