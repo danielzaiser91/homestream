@@ -1,5 +1,5 @@
 {
-  "version": "20260704-2113",
+  "version": "20260704-2143",
   "app": "HomeFlix",
-  "notes": "Continue Watching row with resume + progress bars, My List feature"
+  "notes": "Nav aufgeraeumt: Home/Self-host-Links entfernt, HOMEFLIX-Logo klickbar -> Home"
 }

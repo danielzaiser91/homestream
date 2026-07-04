@@ -128,11 +128,7 @@
 <div class="loader" id="loader"><div class="logo">HOMEFLIX</div></div>
 
 <nav class="nav" id="nav">
-  <div class="logo">HOMEFLIX</div>
-  <div class="links">
-    <a href="#" onclick="showHome();return false">Home</a>
-    <a href="about.html">Self-host</a>
-  </div>
+  <div class="logo" onclick="showHome()" style="cursor:pointer">HOMEFLIX</div>
   <div class="spacer"></div>
   <div class="search">
     <svg viewBox="0 0 24 24"><path d="M15.5 14h-.8l-.3-.3a6.5 6.5 0 1 0-.7.7l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>
@@ -168,7 +164,7 @@
 const SVG_PLAY='<svg viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"/></svg>';
 const SVG_INFO='<svg viewBox="0 0 24 24" fill="white"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/></svg>';
 let DATA=[];
-const BUILD_VERSION="20260704-2113"; // auto-stamped by scripts/release.sh — matches docs/version.json
+const BUILD_VERSION="20260704-2143"; // auto-stamped by scripts/release.sh — matches docs/version.json
 
 function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
@@ -310,7 +306,8 @@ document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closePlayer();});
 
 function showHome(){document.getElementById('gridView').classList.remove('active');
-  document.getElementById('home').style.display='';document.getElementById('q').value='';}
+  document.getElementById('home').style.display='';document.getElementById('q').value='';
+  window.scrollTo({top:0,behavior:'smooth'});}
 
 document.getElementById('q').addEventListener('input',e=>{
   const term=e.target.value.trim().toLowerCase();
