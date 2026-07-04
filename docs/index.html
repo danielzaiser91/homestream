@@ -108,6 +108,13 @@
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
   .foot{padding:30px 4vw 50px;color:#777;font-size:.82rem;border-top:1px solid #222}
   .foot a{color:#999;text-decoration:underline}
+  .update-banner{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;align-items:center;
+    justify-content:center;gap:14px;padding:11px 16px;background:var(--red);color:#fff;font-size:.95rem;
+    font-weight:600;cursor:pointer;box-shadow:0 2px 14px rgba(0,0,0,.5);animation:slidedown .3s ease}
+  .update-banner button{background:#fff;color:var(--red);border:none;border-radius:4px;padding:6px 14px;
+    font-weight:700;cursor:pointer}
+  .update-banner button:hover{opacity:.85}
+  @keyframes slidedown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
 </style>
 </head>
 <body>
@@ -155,6 +162,7 @@
 const SVG_PLAY='<svg viewBox="0 0 24 24" fill="black"><path d="M8 5v14l11-7z"/></svg>';
 const SVG_INFO='<svg viewBox="0 0 24 24" fill="white"><path d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/></svg>';
 let DATA=[];
+const BUILD_VERSION="20260704-1857"; // auto-stamped by scripts/release.sh — matches docs/version.json
 
 function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
@@ -247,12 +255,48 @@ document.getElementById('q').addEventListener('input',e=>{
 
 window.addEventListener('scroll',()=>{document.getElementById('nav').classList.toggle('solid',scrollY>60);});
 
-fetch('catalog.json').then(r=>r.json()).then(d=>{
+fetch('catalog.json?v='+BUILD_VERSION).then(r=>r.json()).then(d=>{
   DATA=d; render(); document.getElementById('loader').style.display='none';
 }).catch(err=>{
   document.getElementById('loader').innerHTML='<div style="text-align:center;color:#b3b3b3">'+
     '<div class="logo" style="color:#e50914">HOMEFLIX</div><p style="margin-top:12px">Could not load catalog.</p></div>';
 });
+
+/* ---- Auto-update watcher: beats GitHub Pages / browser HTML caching ----
+   Fetches version.json (cache-busted) every 15s. If the deployed version is
+   newer than this page's baked BUILD_VERSION:
+     • within the first 5s of load  -> silently reload to the fresh version
+       (self-heals a stale, cached HTML that a user just landed on)
+     • otherwise                    -> show a click-to-update banner
+   Reload navigates to ?v=<version>, a fresh cache key for CDN + browser.     */
+(function(){
+  const KEY='hf_reloaded_for'; let bannerUp=false;
+  function reloadTo(v){
+    try{sessionStorage.setItem(KEY,v);}catch(e){}
+    location.replace(location.pathname+'?v='+encodeURIComponent(v));
+  }
+  function showBanner(v){
+    if(bannerUp)return; bannerUp=true;
+    const b=document.createElement('div'); b.className='update-banner';
+    b.innerHTML='✨ A new version of HomeFlix is live. <button>Update now</button>';
+    b.addEventListener('click',()=>reloadTo(v));
+    document.body.appendChild(b);
+  }
+  async function check(initial){
+    let latest;
+    try{
+      const r=await fetch('version.json?cb='+Date.now(),{cache:'no-store'});
+      if(!r.ok)return; latest=(await r.json()).version;
+    }catch(e){ return; }
+    if(!latest || latest===BUILD_VERSION) return; // up to date
+    let already=null; try{already=sessionStorage.getItem(KEY);}catch(e){}
+    // guard (already===latest) prevents a reload loop if origin HTML is briefly stale
+    if(initial && performance.now()<5000 && already!==latest){ reloadTo(latest); return; }
+    showBanner(latest);
+  }
+  check(true);
+  setInterval(()=>check(false),15000);
+})();
 </script>
 </body>
 </html>

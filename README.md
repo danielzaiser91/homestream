@@ -1,11 +1,15 @@
-# HomeStream 🎬
+# HomeStream / HomeFlix 🎬
 
-A free, self-hosted media server you actually own — **Jellyfin** for playback,
-**Jellyseerr** for a friendly "browse & request" UI, and **Caddy** for
-automatic HTTPS. Deployable to a free Oracle Cloud ARM box or any cheap VPS,
-tuned to stream up to **2K to ~4 people at once** without buffering.
+Two things in one repo:
 
-**Live portal & deploy guide:** https://danielzaiser91.github.io/homestream/
+1. **HomeFlix** — a live, Netflix-style streaming **web app** you can open and
+   watch right now: billboard, genre rows, click-to-play player, search. Runs
+   fully static on GitHub Pages, streaming a catalog of verified public-domain
+   films. **▶ Watch: https://danielzaiser91.github.io/homestream/**
+2. **HomeStream** — a free, self-hosted media-server stack (**Jellyfin** +
+   **Jellyseerr** + **Caddy**) for *your own* library, deployable to a free
+   Oracle Cloud ARM box, tuned to stream **2K to ~4 people at once**.
+   Guide: [/about.html](https://danielzaiser91.github.io/homestream/about.html).
 
 ---
 
@@ -47,12 +51,18 @@ into the media folder. Full walkthrough: [docs/DEPLOY.md](docs/DEPLOY.md).
 ## Repo layout
 
 ```
-docker-compose.yml   Jellyfin + Jellyseerr + Caddy
-Caddyfile            reverse proxy + auto-HTTPS
-.env.example         config template (copy to .env)
-scripts/bootstrap.sh one-command setup for a fresh Ubuntu box
-docs/DEPLOY.md       Oracle Cloud Always Free step-by-step
-docs/HOSTING.md      honest host comparison + bandwidth math
-docs/LEGAL.md        what content is legitimate to add
-docs/index.html      the GitHub Pages portal
+docs/index.html        HomeFlix — the live Netflix-style streaming app
+docs/catalog.json      36 verified public-domain films the app streams
+docs/version.json      version marker for the auto-update watcher
+docs/about.html        HomeStream self-host portal (the deploy guide, styled)
+docker-compose.yml     Jellyfin + Jellyseerr + Caddy (self-host)
+docker-compose.arr.yml OPTIONAL *arr automation overlay (read docs/arr-stack.md)
+Caddyfile              reverse proxy + auto-HTTPS
+.env.example           config template (copy to .env)
+scripts/bootstrap.sh   one-command setup for a fresh Ubuntu box
+scripts/release.sh     stamp + push a new HomeFlix version (triggers auto-update)
+docs/DEPLOY.md         Oracle Cloud Always Free step-by-step
+docs/HOSTING.md        honest host comparison + bandwidth math
+docs/arr-stack.md      what the *arr stack is, and what was left out (& why)
+docs/LEGAL.md          what content is legitimate to add
 ```

@@ -1,0 +1,82 @@
+# OPTIONAL *arr automation overlay.  READ docs/arr-stack.md FIRST.
+#
+# These are legitimate, open-source media-automation apps. Whether using them is
+# legal depends ENTIRELY on the indexers and content you point them at:
+# downloading movies/TV you don't own is copyright infringement in most
+# countries and is your responsibility, not this project's. HomeStream ships
+# this overlay disabled by intent — it exists to explain the architecture.
+#
+# Enable alongside the main stack:
+#   docker compose -f docker-compose.yml -f docker-compose.arr.yml up -d
+#
+# Extra .env keys used here:
+#   DOWNLOADS_PATH=/srv/downloads   (defaults to /srv/downloads if unset)
+
+services:
+  prowlarr:
+    # Indexer manager: the ONE place you add indexers; it syncs them to Radarr/Sonarr.
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    restart: unless-stopped
+    networks: [homestream]
+    environment: [PUID=1000, PGID=1000, TZ=${TZ}]
+    volumes: ["./config/prowlarr:/config"]
+    expose: ["9696"]
+
+  radarr:
+    # Movies: you add a title -> Radarr searches indexers via Prowlarr ->
+    # sends the best match to the download client -> imports & renames on finish.
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    restart: unless-stopped
+    networks: [homestream]
+    environment: [PUID=1000, PGID=1000, TZ=${TZ}]
+    volumes:
+      - "./config/radarr:/config"
+      - "${MEDIA_PATH}:/media"                       # writes organized movies here
+      - "${DOWNLOADS_PATH:-/srv/downloads}:/downloads"
+    expose: ["7878"]
+
+  sonarr:
+    # TV: same flow as Radarr but season/episode-aware, monitors for new episodes.
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    restart: unless-stopped
+    networks: [homestream]
+    environment: [PUID=1000, PGID=1000, TZ=${TZ}]
+    volumes:
+      - "./config/sonarr:/config"
+      - "${MEDIA_PATH}:/media"
+      - "${DOWNLOADS_PATH:-/srv/downloads}:/downloads"
+    expose: ["8989"]
+
+  bazarr:
+    # Subtitles for whatever Radarr/Sonarr import.
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    restart: unless-stopped
+    networks: [homestream]
+    environment: [PUID=1000, PGID=1000, TZ=${TZ}]
+    volumes:
+      - "./config/bazarr:/config"
+      - "${MEDIA_PATH}:/media"
+    expose: ["6767"]
+
+  qbittorrent:
+    # Download client (torrents). Usenet alternative: swap for sabnzbd or nzbget.
+    # For torrents, STRONGLY consider routing this through a VPN — see docs/arr-stack.md.
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    restart: unless-stopped
+    networks: [homestream]
+    environment: [PUID=1000, PGID=1000, TZ=${TZ}, WEBUI_PORT=8080]
+    volumes:
+      - "./config/qbittorrent:/config"
+      - "${DOWNLOADS_PATH:-/srv/downloads}:/downloads"
+    expose: ["8080"]
+
+# NOTE: these admin UIs are intentionally NOT exposed through Caddy to the public
+# internet. Reach them over an SSH tunnel, e.g.:
+#   ssh -L 9696:localhost:9696 -L 7878:localhost:7878 ubuntu@<server-ip>
+# then open http://localhost:9696 etc. (You'd need to also publish the ports on
+# the host or exec into the docker network; see the docs.)
