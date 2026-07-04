@@ -1,0 +1,9 @@
+# Secrets & runtime state — never commit
+.env
+config/
+cache/
+*.log
+
+# OS noise
+.DS_Store
+Thumbs.db

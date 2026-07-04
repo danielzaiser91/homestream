@@ -1,0 +1,6 @@
+# Shell scripts and config consumed on Linux must keep LF endings, even when
+# authored/edited on Windows — otherwise `bash script.sh` fails on the server.
+*.sh   text eol=lf
+Caddyfile text eol=lf
+*.yml  text eol=lf
+.env.example text eol=lf

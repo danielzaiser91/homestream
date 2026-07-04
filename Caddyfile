@@ -1,0 +1,25 @@
+# Caddy auto-HTTPS reverse proxy.
+# Caddy fetches and renews Let's Encrypt certificates automatically as long as
+# WATCH_DOMAIN / REQUEST_DOMAIN point (via DNS) at this server's public IP and
+# ports 80 + 443 are reachable from the internet.
+
+{
+	email {$ACME_EMAIL}
+}
+
+# Jellyfin — the actual player/library ("watch.yourdomain")
+{$WATCH_DOMAIN} {
+	reverse_proxy jellyfin:8096
+	encode gzip
+	header {
+		# Sensible security headers; harmless for a media server.
+		Strict-Transport-Security "max-age=31536000;"
+		X-Content-Type-Options "nosniff"
+	}
+}
+
+# Jellyseerr — the friendly "browse & request a title" UI ("request.yourdomain")
+{$REQUEST_DOMAIN} {
+	reverse_proxy jellyseerr:5055
+	encode gzip
+}

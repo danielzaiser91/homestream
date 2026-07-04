@@ -1,0 +1,72 @@
+# HomeStream — self-hosted media server stack
+# Jellyfin (server) + Jellyseerr (request UI) + Caddy (auto-HTTPS reverse proxy)
+#
+# Designed to run on a small always-on Linux box (Oracle Cloud Always Free ARM,
+# Hetzner CX, an old PC, a Raspberry Pi 4/5, etc.). Tuned for DIRECT PLAY:
+# the free ARM tier has no GPU, so keep your files in client-friendly formats
+# (H.264/HEVC in MP4/MKV, AAC/AC3 audio) and no transcoding is needed even at 2K.
+#
+# Copy .env.example -> .env and fill it in before `docker compose up -d`.
+
+networks:
+  homestream:
+    driver: bridge
+
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+    restart: unless-stopped
+    networks: [homestream]
+    # Not published to the host — Caddy reaches it by name over the internal
+    # network. This keeps the raw HTTP port off the public internet.
+    expose:
+      - "8096"
+    environment:
+      - TZ=${TZ}
+      - JELLYFIN_PublishedServerUrl=https://${WATCH_DOMAIN}
+    volumes:
+      - ./config/jellyfin:/config
+      - ./cache/jellyfin:/cache
+      - ${MEDIA_PATH}:/media:ro   # your library, mounted read-only
+    # If you later run this on a machine WITH an Intel/AMD/NVIDIA GPU, uncomment
+    # the block below to enable free hardware transcoding (Jellyfin never
+    # paywalls it, unlike Plex):
+    # devices:
+    #   - /dev/dri:/dev/dri
+
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    restart: unless-stopped
+    networks: [homestream]
+    expose:
+      - "5055"
+    environment:
+      - TZ=${TZ}
+      - LOG_LEVEL=info
+    volumes:
+      - ./config/jellyseerr:/app/config
+    depends_on:
+      - jellyfin
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy
+    restart: unless-stopped
+    networks: [homestream]
+    # The only ports open to the world. Caddy terminates TLS and proxies inward.
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - WATCH_DOMAIN=${WATCH_DOMAIN}
+      - REQUEST_DOMAIN=${REQUEST_DOMAIN}
+      - ACME_EMAIL=${ACME_EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./config/caddy/data:/data
+      - ./config/caddy/config:/config
+    depends_on:
+      - jellyfin
+      - jellyseerr
