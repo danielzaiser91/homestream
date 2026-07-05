@@ -81,6 +81,7 @@ services:
       - WATCH_DOMAIN=${WATCH_DOMAIN}
       - REQUEST_DOMAIN=${REQUEST_DOMAIN}
       - FILES_DOMAIN=${FILES_DOMAIN:-files.localhost}
+      - RADARR_DOMAIN=${RADARR_DOMAIN:-radarr.localhost}
       - ACME_EMAIL=${ACME_EMAIL}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro

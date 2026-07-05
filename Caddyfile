@@ -30,3 +30,12 @@
 	reverse_proxy filebrowser:80
 	encode gzip
 }
+
+# Radarr admin UI ("radarr.yourdomain"). Only defined if RADARR_DOMAIN is set;
+# defaults to radarr.localhost (unreachable from outside) otherwise. Radarr has
+# its OWN login (Forms auth) — make sure it is enabled before exposing this, or
+# the admin panel is wide open. Used e.g. by Jellyseerr's "Open in Radarr" link.
+{$RADARR_DOMAIN:radarr.localhost} {
+	reverse_proxy radarr:7878
+	encode gzip
+}
