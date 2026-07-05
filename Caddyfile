@@ -23,3 +23,10 @@
 	reverse_proxy jellyseerr:5055
 	encode gzip
 }
+
+# FileBrowser — drag-and-drop uploads into the media library ("files.yourdomain").
+# Defaults to files.localhost (unreachable from outside) if FILES_DOMAIN is unset.
+{$FILES_DOMAIN:files.localhost} {
+	reverse_proxy filebrowser:80
+	encode gzip
+}

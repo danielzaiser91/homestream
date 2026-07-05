@@ -6,6 +6,7 @@ cache/
 
 # Local dev / harness tooling
 .claude/
+__custom/
 
 # OS noise
 .DS_Store

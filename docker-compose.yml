@@ -50,6 +50,24 @@ services:
     depends_on:
       - jellyfin
 
+  filebrowser:
+    # Drag-and-drop web uploads into the media library ("files.yourdomain").
+    # Runs as uid 1000 so uploads are owned by the media user right away —
+    # no chown needed before Jellyfin can see them.
+    image: filebrowser/filebrowser:latest
+    container_name: filebrowser
+    restart: unless-stopped
+    networks: [homestream]
+    user: "1000:1000"
+    expose:
+      - "80"
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ${MEDIA_PATH}:/srv                     # upload target = the library
+      - ./config/filebrowser/database:/database
+      - ./config/filebrowser/config:/config
+
   caddy:
     image: caddy:2-alpine
     container_name: caddy
@@ -62,6 +80,7 @@ services:
     environment:
       - WATCH_DOMAIN=${WATCH_DOMAIN}
       - REQUEST_DOMAIN=${REQUEST_DOMAIN}
+      - FILES_DOMAIN=${FILES_DOMAIN:-files.localhost}
       - ACME_EMAIL=${ACME_EMAIL}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
@@ -70,3 +89,4 @@ services:
     depends_on:
       - jellyfin
       - jellyseerr
+      - filebrowser
