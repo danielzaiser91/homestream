@@ -19,7 +19,10 @@ services:
     container_name: prowlarr
     restart: unless-stopped
     networks: [homestream]
-    environment: [PUID=1000, PGID=1000, TZ=${TZ}]
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ}
     volumes: ["./config/prowlarr:/config"]
     expose: ["9696"]
 
@@ -30,7 +33,10 @@ services:
     container_name: radarr
     restart: unless-stopped
     networks: [homestream]
-    environment: [PUID=1000, PGID=1000, TZ=${TZ}]
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ}
     volumes:
       - "./config/radarr:/config"
       - "${MEDIA_PATH}:/media"                       # writes organized movies here
@@ -43,7 +49,10 @@ services:
     container_name: sonarr
     restart: unless-stopped
     networks: [homestream]
-    environment: [PUID=1000, PGID=1000, TZ=${TZ}]
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ}
     volumes:
       - "./config/sonarr:/config"
       - "${MEDIA_PATH}:/media"
@@ -56,7 +65,10 @@ services:
     container_name: bazarr
     restart: unless-stopped
     networks: [homestream]
-    environment: [PUID=1000, PGID=1000, TZ=${TZ}]
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ}
     volumes:
       - "./config/bazarr:/config"
       - "${MEDIA_PATH}:/media"
@@ -69,7 +81,11 @@ services:
     container_name: qbittorrent
     restart: unless-stopped
     networks: [homestream]
-    environment: [PUID=1000, PGID=1000, TZ=${TZ}, WEBUI_PORT=8080]
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ}
+      - WEBUI_PORT=8080
     volumes:
       - "./config/qbittorrent:/config"
       - "${DOWNLOADS_PATH:-/srv/downloads}:/downloads"
